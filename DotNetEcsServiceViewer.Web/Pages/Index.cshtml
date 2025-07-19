@@ -1,0 +1,165 @@
+﻿@page
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model IndexModel
+@{
+	ViewData["Title"] = "ECS Service Viewer";
+}
+
+<div class="text-center">
+	<h1 class="display-4">ECS Service Viewer</h1>
+
+	<form method="get">
+		<div class="form-group">
+			<label>ECSクラスタ名:</label>
+			<select asp-for="SelectedCluster" asp-items="@(new SelectList(Model.ClusterNames))" class="form-control" onchange="this.form.submit()">
+				<option value="">-- ECSクラスタを選択してください --</option>
+			</select>
+		</div>
+	</form>
+
+	@if (Model.EcsServices.Any())
+	{
+		<h2>Services in @Model.SelectedCluster</h2>
+		<table class="table table-striped">
+			<thead>
+			<tr>
+				<th>Service Name</th>
+				<th>Status</th>
+				<th>Desired Count</th>
+				<th>Running Count</th>
+				<th>Pending Count</th>
+				<th>Actions</th>
+			</tr>
+			</thead>
+			<tbody>
+			@foreach (var service in Model.EcsServices)
+			{
+				<tr>
+					<td>@service.ServiceName</td>
+					<td>@service.Status</td>
+					<td>@service.DesiredCount</td>
+					<td>@service.RunningCount</td>
+					<td>@service.PendingCount</td>
+					<td>
+						@if (service.DesiredCount > 0)
+						{
+							@* Stop ボタン *@
+							<button type="button" class="btn btn-danger btn-sm stop-service-btn"
+							        data-bs-toggle="modal"
+							        data-bs-target="#confirmModal"
+							        data-action="stop"
+							        data-cluster-name="@Model.SelectedCluster"
+							        data-service-name="@service.ServiceName">
+								Stop
+							</button>
+						}
+						else
+						{
+							@* Start ボタン *@
+							<button type="button" class="btn btn-success btn-sm start-service-btn"
+							        data-bs-toggle="modal"
+							        data-bs-target="#confirmModal"
+							        data-action="start"
+							        data-cluster-name="@Model.SelectedCluster"
+							        data-service-name="@service.ServiceName">
+								Start
+							</button>
+						}
+					</td>
+				</tr>
+			}
+			</tbody>
+		</table>
+	}
+	else if (!string.IsNullOrEmpty(Model.SelectedCluster))
+	{
+		<p>クラスタ "@Model.SelectedCluster" にサービスが見つかりませんでした.</p>
+	}
+</div>
+
+@* モーダルダイアログの定義 *@
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="confirmModalLabel">Confirm Action</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body" id="modalBodyMessage">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+				<form id="actionForm" method="post">
+					<input type="hidden" id="modalClusterName" name="clusterName" />
+					<input type="hidden" id="modalServiceName" name="serviceName" />
+					<button type="submit" id="confirmActionButton" class="btn btn-primary">Confirm</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			var confirmModal = document.getElementById('confirmModal');
+			confirmModal.addEventListener('show.bs.modal', function (event) {
+				// トリガーとなったボタンを取得
+				var button = event.relatedTarget;
+
+				// ボタンからデータ属性を取得
+				var action = button.getAttribute('data-action');
+				var clusterName = button.getAttribute('data-cluster-name');
+				var serviceName = button.getAttribute('data-service-name');
+
+				// モーダルのコンテンツとフォームの hidden input を更新
+				var modalTitle = confirmModal.querySelector('.modal-title');
+				var modalBodyMessage = document.getElementById('modalBodyMessage');
+				var confirmActionButton = document.getElementById('confirmActionButton');
+				var actionForm = document.getElementById('actionForm');
+
+				var message = "";
+				var buttonText = "";
+				var buttonClass = "";
+				var handlerUrl = "";
+
+				if (action === "stop") {
+					modalTitle.textContent = "ECSサービス停止";
+					message = `ECSサービスを停止します、よろしいですか？<br>サービス名: ${serviceName} クラスタ名: ${clusterName}`;
+					buttonText = "停止";
+					buttonClass = "btn-danger";
+					handlerUrl = "?handler=StopService"; // StopService ハンドラーを指す
+				} else if (action === "start") {
+					modalTitle.textContent = "ECSサービス起動";
+					message = `ECSサービスを起動します、よろしいですか？<br>サービス名: ${serviceName} クラスタ名: ${clusterName}？`;
+					buttonText = "起動";
+					buttonClass = "btn-success";
+					handlerUrl = "?handler=StartService"; // StartService ハンドラーを指す
+				}
+
+				modalBodyMessage.innerHTML = message;
+				confirmActionButton.textContent = buttonText;
+				confirmActionButton.className = `btn ${buttonClass}`; // ボタンのスタイルを更新
+				actionForm.action = handlerUrl; // フォームのアクションを更新
+
+				// hidden input の値を設定
+				document.getElementById('modalClusterName').value = clusterName;
+				document.getElementById('modalServiceName').value = serviceName;
+			});
+
+			@if (TempData["SuccessMessage"] != null)
+			{
+				<text>
+                    showToast('@Html.Raw(JavaScriptEncoder.Default.Encode(TempData["SuccessMessage"].ToString()))', 'success');
+                </text>
+			}
+            @if (TempData["ErrorMessage"] != null)
+            {
+	            <text>
+                    showToast('@Html.Raw(JavaScriptEncoder.Default.Encode(TempData["ErrorMessage"].ToString()))', 'danger');
+                </text>
+            }
+		});
+	</script>
+}
