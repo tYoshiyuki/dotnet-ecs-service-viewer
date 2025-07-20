@@ -1,7 +1,9 @@
 ﻿@page
 @using System.Text.Encodings.Web
+@using DotNetEcsServiceViewer.Web.Services
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model IndexModel
+@inject MessageService MessageService
 @{
 	ViewData["Title"] = "ECS Service Viewer";
 }
@@ -44,26 +46,26 @@
 					<td>
 						@if (service.DesiredCount > 0)
 						{
-							@* Stop ボタン *@
+							@* 停止 ボタン *@
 							<button type="button" class="btn btn-danger btn-sm stop-service-btn"
 							        data-bs-toggle="modal"
 							        data-bs-target="#confirmModal"
 							        data-action="stop"
 							        data-cluster-name="@Model.SelectedCluster"
 							        data-service-name="@service.ServiceName">
-								Stop
+								停止
 							</button>
 						}
 						else
 						{
-							@* Start ボタン *@
+							@* 起動 ボタン *@
 							<button type="button" class="btn btn-success btn-sm start-service-btn"
 							        data-bs-toggle="modal"
 							        data-bs-target="#confirmModal"
 							        data-action="start"
 							        data-cluster-name="@Model.SelectedCluster"
 							        data-service-name="@service.ServiceName">
-								Start
+								起動
 							</button>
 						}
 					</td>
@@ -148,16 +150,16 @@
 				document.getElementById('modalServiceName').value = serviceName;
 			});
 
-			@if (TempData["SuccessMessage"] != null)
+			@if (MessageService.Success != null)
 			{
 				<text>
-                    showToast('@Html.Raw(JavaScriptEncoder.Default.Encode(TempData["SuccessMessage"].ToString()))', 'success');
+					showToast('@Html.Raw(JavaScriptEncoder.Default.Encode(MessageService.Success))', 'success');
                 </text>
 			}
-            @if (TempData["ErrorMessage"] != null)
+			@if (MessageService.Error != null)
             {
 	            <text>
-                    showToast('@Html.Raw(JavaScriptEncoder.Default.Encode(TempData["ErrorMessage"].ToString()))', 'danger');
+                    showToast('@Html.Raw(JavaScriptEncoder.Default.Encode(MessageService.Error))', 'danger');
                 </text>
             }
 		});

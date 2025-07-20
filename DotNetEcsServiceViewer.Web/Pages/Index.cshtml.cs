@@ -12,6 +12,7 @@ namespace DotNetEcsServiceViewer.Web.Pages
     public class IndexModel : PageModel
     {
         private readonly EcsInfoControlService _ecsInfoControlService;
+        private readonly MessageService _messageService;
 
         public List<string> ClusterNames { get; set; }
         public List<Service> EcsServices { get; set; } = [];
@@ -23,9 +24,11 @@ namespace DotNetEcsServiceViewer.Web.Pages
         /// コンストラクタ
         /// </summary>
         /// <param name="ecsInfoControlService"><see cref="EcsInfoControlService"/></param>
-        public IndexModel(EcsInfoControlService ecsInfoControlService)
+        /// <param name="messageService"><see cref="MessageService"/></param>
+        public IndexModel(EcsInfoControlService ecsInfoControlService, MessageService messageService)
         {
             _ecsInfoControlService = ecsInfoControlService;
+            _messageService = messageService;
         }
 
         /// <summary>
@@ -57,22 +60,22 @@ namespace DotNetEcsServiceViewer.Web.Pages
             if (string.IsNullOrEmpty(clusterName) || string.IsNullOrEmpty(serviceName))
             {
                 // エラー処理
-                TempData["ErrorMessage"] = "クラスタ名、サービス名が正しく設定されていません。";
+                _messageService.Error = "クラスタ名、サービス名が正しく設定されていません。";
                 return RedirectToPage(new { SelectedCluster });
             }
 
             try
             {
                 await _ecsInfoControlService.UpdateEcsServiceDesiredCountAsync(clusterName, serviceName, 0);
-                TempData["SuccessMessage"] = $"ECSサービスを停止しました。サービス名: {serviceName} クラスタ名: {clusterName}";
+                _messageService.Success = $"ECSサービスを停止しました。サービス名: {serviceName} クラスタ名: {clusterName}";
             }
             catch (AmazonECSException ex)
             {
-                TempData["ErrorMessage"] = $"ECSサービスの停止に失敗しました。サービス名: {serviceName}: {ex.Message}";
+                _messageService.Error = $"ECSサービスの停止に失敗しました。サービス名: {serviceName}: {ex.Message}";
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"想定外のエラーが発生しました: {ex.Message}";
+                _messageService.Error = $"想定外のエラーが発生しました: {ex.Message}";
             }
 
             // データの再ロードとページのリダイレクト
@@ -89,22 +92,22 @@ namespace DotNetEcsServiceViewer.Web.Pages
         {
             if (string.IsNullOrEmpty(clusterName) || string.IsNullOrEmpty(serviceName))
             {
-                TempData["ErrorMessage"] = "クラスタ名、サービス名が正しく設定されていません。";
+                _messageService.Error = "クラスタ名、サービス名が正しく設定されていません。";
                 return RedirectToPage(new { SelectedCluster });
             }
 
             try
             {
                 await _ecsInfoControlService.UpdateEcsServiceDesiredCountAsync(clusterName, serviceName, 1);
-                TempData["SuccessMessage"] = $"ECSサービスが起動しました。サービス名: {serviceName} クラスタ名: {clusterName}";
+                _messageService.Success = $"ECSサービスが起動しました。サービス名: {serviceName} クラスタ名: {clusterName}";
             }
             catch (AmazonECSException ex)
             {
-                TempData["ErrorMessage"] = $"ECSサービスの起動に失敗しました。サービス名: {serviceName}: {ex.Message}";
+                _messageService.Error = $"ECSサービスの起動に失敗しました。サービス名: {serviceName}: {ex.Message}";
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"想定外のエラーが発生しました: {ex.Message}";
+                _messageService.Error = $"想定外のエラーが発生しました: {ex.Message}";
             }
 
             return RedirectToPage(new { SelectedCluster = clusterName });

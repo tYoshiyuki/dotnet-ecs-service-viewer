@@ -6,7 +6,6 @@
     <title>@ViewData["Title"] - DotNetEcsServiceViewer.Web</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/DotNetEcsServiceViewer.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header>
@@ -51,7 +50,9 @@
     </div>
 
     <script>
-        // トーストを表示するための汎用関数
+		/**
+		 * トーストを表示するための汎用関数
+		 */
         function showToast(message, type = 'success') {
             var toastContainer = document.getElementById('toastContainer');
             if (!toastContainer) {
