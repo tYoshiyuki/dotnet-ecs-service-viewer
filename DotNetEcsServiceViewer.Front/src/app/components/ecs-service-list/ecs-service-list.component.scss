@@ -1,0 +1,41 @@
+.container {
+  margin: 20px;
+  padding: 20px;
+}
+
+.header {
+  margin-bottom: 20px;
+  mat-form-field {
+    width: 300px;
+  }
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+}
+
+.error-message {
+  margin: 20px 0;
+  mat-card {
+    padding: 20px;
+    background-color: #ffe0e0;
+    color: #c62828;
+  }
+  mat-card-actions {
+    margin-top: 10px;
+  }
+}
+
+.active-status {
+  color: green;
+  font-weight: bold;
+}
+
+.inactive-status {
+  color: orange;
+  font-weight: bold;
+}
