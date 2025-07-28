@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
-import { EcsServiceListComponent } from './components/ecs-service-list/ecs-service-list.component';
+import { EcsServiceList } from './components/ecs-service-list/ecs-service-list';
 
 export const routes: Routes = [
-  { path: '', component: EcsServiceListComponent },
-  { path: '**', redirectTo: '' }
+    { path: '', component: EcsServiceList },
+    { path: '**', redirectTo: '' }
 ];

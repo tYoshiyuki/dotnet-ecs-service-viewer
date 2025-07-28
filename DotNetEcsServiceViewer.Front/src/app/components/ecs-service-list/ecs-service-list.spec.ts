@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { EcsServiceListComponent } from './ecs-service-list.component';
+import { EcsServiceList } from './ecs-service-list';
 
-describe('EcsServiceListComponent', () => {
-  let component: EcsServiceListComponent;
-  let fixture: ComponentFixture<EcsServiceListComponent>;
+describe('EcsServiceList', () => {
+  let component: EcsServiceList;
+  let fixture: ComponentFixture<EcsServiceList>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [EcsServiceListComponent]
+      imports: [EcsServiceList]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(EcsServiceListComponent);
+    fixture = TestBed.createComponent(EcsServiceList);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

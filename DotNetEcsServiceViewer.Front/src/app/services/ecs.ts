@@ -1,12 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { EcsClusterNames, EcsServiceInfo, UpdateEcsServiceDesiredCountRequest } from '@app/models/ecs-model';
 import { Observable } from 'rxjs';
+import { EcsClusterNames } from '../models/ecs-cluster-names';
+import { EcsServiceInfo } from '../models/ecs-service-info';
+import { UpdateEcsServiceDesiredCountRequest } from '../models/update-ecs-service-desired-count-request';
 
 @Injectable({
   providedIn: 'root'
 })
-export class EcsService {
+export class Ecs {
 
   private apiUrl = '/api/ecs'; // APIコントローラのルートパスに合わせる
 

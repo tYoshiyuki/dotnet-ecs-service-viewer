@@ -11,15 +11,16 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { ConfirmationDialogComponent } from '@app/components/confirmation-dialog/confirmation-dialog.component';
-import { EcsClusterNames, EcsServiceInfo, UpdateEcsServiceDesiredCountRequest } from '@app/models/ecs-model';
-import { EcsService } from '@app/services/ecs.service';
 import { of } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
+import { EcsClusterNames } from '../../models/ecs-cluster-names';
+import { EcsServiceInfo } from '../../models/ecs-service-info';
+import { UpdateEcsServiceDesiredCountRequest } from '../../models/update-ecs-service-desired-count-request';
+import { Ecs } from '../../services/ecs';
+import { ConfirmationDialog } from '../confirmation-dialog/confirmation-dialog';
 
 @Component({
   selector: 'app-ecs-service-list',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -32,10 +33,10 @@ import { catchError, finalize } from 'rxjs/operators';
     MatSelectModule,
     MatFormFieldModule
   ],
-  templateUrl: './ecs-service-list.component.html',
-  styleUrls: ['./ecs-service-list.component.scss']
+  templateUrl: './ecs-service-list.html',
+  styleUrl: './ecs-service-list.scss'
 })
-export class EcsServiceListComponent implements OnInit {
+export class EcsServiceList implements OnInit {
   displayedColumns: string[] = ['serviceName', 'clusterName', 'status', 'runningCount', 'desiredCount', 'actions'];
   dataSource = new MatTableDataSource<EcsServiceInfo>();
   isLoading = signal(true);
@@ -45,7 +46,7 @@ export class EcsServiceListComponent implements OnInit {
   selectedCluster = signal<string | null>(null);
 
   constructor(
-    private ecsService: EcsService,
+    private ecs: Ecs,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {
@@ -68,15 +69,16 @@ export class EcsServiceListComponent implements OnInit {
   loadEcsClusterNames(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.ecsService.getEcsClusterNames().pipe(
+    this.ecs.getEcsClusterNames().pipe(
       catchError(err => {
+        this.isLoading.set(false)
         console.error('ECSクラスター名の取得中にエラーが発生しました:', err);
         this.errorMessage.set('ECSクラスター名の読み込みに失敗しました。');
         this.snackBar.open('ECSクラスター名の読み込みに失敗しました。', '閉じる', { duration: 3000 });
         return of([]);
       }),
-      finalize(() => this.isLoading.set(false))
     ).subscribe(names => {
+      this.isLoading.set(false)
       this.clusterNames.set(names);
       // 初回ロード時、クラスターが一つでもあれば最初のものを選択
       if (names.length > 0 && !this.selectedCluster()) {
@@ -93,15 +95,16 @@ export class EcsServiceListComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     this.dataSource.data = [];
-    this.ecsService.getEcsServices(clusterName).pipe(
+    this.ecs.getEcsServices(clusterName).pipe(
       catchError(err => {
+        this.isLoading.set(false)
         console.error(`クラスター '${clusterName}' のECSサービスの取得中にエラーが発生しました:`, err);
         this.errorMessage.set(`クラスター '${clusterName}' のECSサービスの読み込みに失敗しました。`);
         this.snackBar.open(`サービス読み込みに失敗しました。`, '閉じる', { duration: 3000 });
         return of([]);
       }),
-      finalize(() => this.isLoading.set(false))
     ).subscribe(services => {
+      this.isLoading.set(false)
       this.dataSource.data = services;
     });
   }
@@ -119,7 +122,7 @@ export class EcsServiceListComponent implements OnInit {
    * @param service 対象のECSサービス
    */
   confirmStartService(service: EcsServiceInfo): void {
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
       width: '350px',
       data: { title: 'サービスの起動確認', message: `[${service.serviceName}] サービスを起動しますか？` }
     });
@@ -136,7 +139,7 @@ export class EcsServiceListComponent implements OnInit {
    * @param service 対象のECSサービス
    */
   confirmStopService(service: EcsServiceInfo): void {
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
       width: '350px',
       data: { title: 'サービスの停止確認', message: `[${service.serviceName}] サービスを停止しますか？` }
     });
@@ -164,15 +167,16 @@ export class EcsServiceListComponent implements OnInit {
       desiredCount: desiredCount
     };
 
-    this.ecsService.updateEcsServiceDesiredCount(request).pipe(
+    this.ecs.updateEcsServiceDesiredCount(request).pipe(
       catchError(err => {
+        this.isLoading.set(false)
         console.error(`サービス [${service.serviceName}] の${operationName}中にエラーが発生しました:`, err);
         this.errorMessage.set(`[${service.serviceName}] の${operationName}に失敗しました。`);
         this.snackBar.open(`[${service.serviceName}] の${operationName}に失敗しました。`, '閉じる', { duration: 3000 });
         return of(null);
       }),
-      finalize(() => this.isLoading.set(false))
     ).subscribe(updatedService => {
+      this.isLoading.set(false)
       if (updatedService) {
         this.snackBar.open(`[${service.serviceName}] を${operationName}しました。`, '閉じる', { duration: 3000 });
         // UIを更新するため、現在のクラスターのサービスを再ロード
